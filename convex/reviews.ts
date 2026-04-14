@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { query, mutation } from "./_generated/server";
+import { assertAdminKey } from "./adminAuth";
 
 export const listApproved = query({
   args: {},
@@ -7,13 +8,15 @@ export const listApproved = query({
     return ctx.db
       .query("reviews")
       .withIndex("by_status", (q) => q.eq("status", "approved"))
+      .order("desc")
       .collect();
   },
 });
 
 export const listAll = query({
-  args: {},
-  handler: async (ctx) => {
+  args: { adminKey: v.string() },
+  handler: async (ctx, args) => {
+    assertAdminKey(args.adminKey);
     return ctx.db.query("reviews").order("desc").collect();
   },
 });
@@ -35,6 +38,7 @@ export const submit = mutation({
 
 export const updateStatus = mutation({
   args: {
+    adminKey: v.string(),
     id: v.id("reviews"),
     status: v.union(
       v.literal("pending"),
@@ -43,19 +47,15 @@ export const updateStatus = mutation({
     ),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("Not authenticated");
-
+    assertAdminKey(args.adminKey);
     return ctx.db.patch(args.id, { status: args.status });
   },
 });
 
 export const remove = mutation({
-  args: { id: v.id("reviews") },
+  args: { adminKey: v.string(), id: v.id("reviews") },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("Not authenticated");
-
+    assertAdminKey(args.adminKey);
     await ctx.db.delete(args.id);
   },
 });

@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { ChevronLeft, ChevronRight, Quote, Star } from "lucide-react";
+import { useQuery, useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -60,7 +62,17 @@ export function ReviewsSection() {
   const [rating, setRating] = useState(5);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const reviews = fallbackReviews;
+  const remote = useQuery(api.reviews.listApproved);
+  const submitReview = useMutation(api.reviews.submit);
+  const reviews =
+    remote && remote.length > 0
+      ? remote.map((r) => ({
+          id: r._id,
+          customerName: r.customerName,
+          text: r.text,
+          rating: r.rating,
+        }))
+      : fallbackReviews;
 
   const goNext = useCallback(() => {
     setCurrentIndex((prev) => (prev + 1) % reviews.length);
@@ -74,6 +86,10 @@ export function ReviewsSection() {
     const timer = setInterval(goNext, 8000);
     return () => clearInterval(timer);
   }, [goNext]);
+
+  useEffect(() => {
+    if (currentIndex >= reviews.length) setCurrentIndex(0);
+  }, [reviews.length, currentIndex]);
 
   const current = reviews[currentIndex];
 
@@ -91,8 +107,7 @@ export function ReviewsSection() {
 
     setIsSubmitting(true);
     try {
-      // When Convex is connected, this will save to the database via api.reviews.submit
-      await new Promise((r) => setTimeout(r, 500));
+      await submitReview({ customerName, text, rating });
       toast.success(
         "Thank you! Your review has been submitted for approval."
       );

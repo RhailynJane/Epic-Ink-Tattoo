@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Check, X, Trash2, Star, Filter } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Check, X, Trash2, Star, Filter, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -35,48 +35,13 @@ import { toast } from "sonner";
 type ReviewStatus = "pending" | "approved" | "rejected";
 
 interface Review {
-  id: string;
+  _id: string;
   customerName: string;
   text: string;
   rating: number;
   status: ReviewStatus;
-  createdAt: string;
+  createdAt: number;
 }
-
-const initialReviews: Review[] = [
-  {
-    id: "1",
-    customerName: "Emerson",
-    text: "The entire experience at Epic Ink Tattoo was exceptional. The studio had a clean and inviting atmosphere, and the artist made sure I was comfortable throughout the entire session.",
-    rating: 5,
-    status: "approved",
-    createdAt: "2025-12-15",
-  },
-  {
-    id: "2",
-    customerName: "Sarah M.",
-    text: "Amazing art. Eman is incredibly talented and really listens to what you want. The attention to detail is phenomenal.",
-    rating: 5,
-    status: "approved",
-    createdAt: "2026-01-10",
-  },
-  {
-    id: "3",
-    customerName: "James R.",
-    text: "Best tattoo experience of my life. The level of artistry here is unmatched.",
-    rating: 5,
-    status: "approved",
-    createdAt: "2026-02-01",
-  },
-  {
-    id: "4",
-    customerName: "Alex P.",
-    text: "Great studio, very clean and professional. I love my new tattoo!",
-    rating: 4,
-    status: "pending",
-    createdAt: "2026-02-20",
-  },
-];
 
 function getStatusBadge(status: ReviewStatus) {
   switch (status) {
@@ -101,39 +66,90 @@ function getStatusBadge(status: ReviewStatus) {
   }
 }
 
-export default function AdminReviewsPage() {
-  const [reviews, setReviews] = useState<Review[]>(initialReviews);
-  const [statusFilter, setStatusFilter] = useState<string>("all");
+function formatDate(ts: number) {
+  return new Date(ts).toLocaleDateString("en-CA", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+}
 
-  const filtered =
-    statusFilter === "all"
+export default function AdminReviewsPage() {
+  const [reviews, setReviews] = useState<Review[] | null>(null);
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [mutating, setMutating] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    try {
+      const res = await fetch("/api/admin/reviews", { cache: "no-store" });
+      if (!res.ok) throw new Error("Failed to load reviews.");
+      const data = await res.json();
+      setReviews(data.reviews ?? []);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to load.");
+      setReviews([]);
+    }
+  }, []);
+
+  useEffect(() => {
+    load();
+    const interval = setInterval(load, 10000);
+    return () => clearInterval(interval);
+  }, [load]);
+
+  const filtered = useMemo(() => {
+    if (!reviews) return [];
+    return statusFilter === "all"
       ? reviews
       : reviews.filter((r) => r.status === statusFilter);
+  }, [reviews, statusFilter]);
 
-  function handleApprove(id: string) {
-    setReviews((prev) =>
-      prev.map((r) =>
-        r.id === id ? { ...r, status: "approved" as ReviewStatus } : r
-      )
-    );
-    toast.success("Review approved!");
+  const pendingCount = useMemo(
+    () => reviews?.filter((r) => r.status === "pending").length ?? 0,
+    [reviews]
+  );
+
+  async function handleStatusChange(id: string, newStatus: ReviewStatus) {
+    setMutating(id);
+    try {
+      const res = await fetch(`/api/admin/reviews/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus }),
+      });
+      if (!res.ok) throw new Error("Failed to update.");
+      setReviews((prev) =>
+        prev ? prev.map((r) => (r._id === id ? { ...r, status: newStatus } : r)) : prev
+      );
+      toast.success(
+        newStatus === "approved"
+          ? "Review approved."
+          : newStatus === "rejected"
+            ? "Review rejected."
+            : "Review set to pending."
+      );
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Update failed.");
+    } finally {
+      setMutating(null);
+    }
   }
 
-  function handleReject(id: string) {
-    setReviews((prev) =>
-      prev.map((r) =>
-        r.id === id ? { ...r, status: "rejected" as ReviewStatus } : r
-      )
-    );
-    toast.success("Review rejected.");
+  async function handleDelete(id: string) {
+    setMutating(id);
+    try {
+      const res = await fetch(`/api/admin/reviews/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to delete.");
+      setReviews((prev) => (prev ? prev.filter((r) => r._id !== id) : prev));
+      toast.success("Review deleted.");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Delete failed.");
+    } finally {
+      setMutating(null);
+    }
   }
 
-  function handleDelete(id: string) {
-    setReviews((prev) => prev.filter((r) => r.id !== id));
-    toast.success("Review deleted.");
-  }
-
-  const pendingCount = reviews.filter((r) => r.status === "pending").length;
+  const loading = reviews === null;
 
   return (
     <div>
@@ -168,122 +184,26 @@ export default function AdminReviewsPage() {
         </div>
       </div>
 
-      {/* Mobile cards view */}
-      <div className="flex flex-col gap-4 md:hidden">
-        {filtered.map((review) => (
-          <div
-            key={review.id}
-            className="rounded-lg border border-border bg-card p-4"
-          >
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="font-medium text-foreground">
-                  {review.customerName}
-                </p>
-                <div className="mt-1 flex gap-0.5">
-                  {Array.from({ length: review.rating }).map((_, i) => (
-                    <Star
-                      key={i}
-                      className="h-3.5 w-3.5 fill-primary text-primary"
-                    />
-                  ))}
-                </div>
-              </div>
-              {getStatusBadge(review.status)}
-            </div>
-            <p className="mt-3 text-sm text-foreground/70">{review.text}</p>
-            <div className="mt-4 flex items-center justify-between">
-              <span className="text-xs text-muted-foreground">
-                {review.createdAt}
-              </span>
-              <div className="flex gap-1">
-                {review.status !== "approved" && (
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="text-emerald-400 hover:bg-emerald-500/10"
-                    onClick={() => handleApprove(review.id)}
-                  >
-                    <Check className="mr-1 h-3.5 w-3.5" />
-                    Approve
-                  </Button>
-                )}
-                {review.status !== "rejected" && (
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="text-amber-400 hover:bg-amber-500/10"
-                    onClick={() => handleReject(review.id)}
-                  >
-                    <X className="mr-1 h-3.5 w-3.5" />
-                    Reject
-                  </Button>
-                )}
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="text-muted-foreground hover:text-destructive"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent className="border-border bg-card">
-                    <AlertDialogHeader>
-                      <AlertDialogTitle className="text-foreground">
-                        Delete Review
-                      </AlertDialogTitle>
-                      <AlertDialogDescription className="text-muted-foreground">
-                        Are you sure you want to delete this review from{" "}
-                        {review.customerName}?
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel className="border-border bg-transparent text-foreground hover:bg-muted">
-                        Cancel
-                      </AlertDialogCancel>
-                      <AlertDialogAction
-                        onClick={() => handleDelete(review.id)}
-                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                      >
-                        Delete
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
+      {loading && (
+        <div className="flex justify-center py-12">
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        </div>
+      )}
 
-      {/* Desktop table view */}
-      <div className="hidden rounded-lg border border-border md:block">
-        <Table>
-          <TableHeader>
-            <TableRow className="border-border hover:bg-transparent">
-              <TableHead className="text-muted-foreground">Customer</TableHead>
-              <TableHead className="text-muted-foreground">Review</TableHead>
-              <TableHead className="text-muted-foreground">Rating</TableHead>
-              <TableHead className="text-muted-foreground">Status</TableHead>
-              <TableHead className="text-muted-foreground">Date</TableHead>
-              <TableHead className="text-right text-muted-foreground">
-                Actions
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filtered.map((review) => (
-              <TableRow key={review.id} className="border-border">
-                <TableCell className="font-medium text-foreground">
-                  {review.customerName}
-                </TableCell>
-                <TableCell className="max-w-sm text-foreground/70">
-                  <p className="line-clamp-2">{review.text}</p>
-                </TableCell>
-                <TableCell>
-                  <div className="flex gap-0.5">
+      {/* Mobile cards view */}
+      {!loading && (
+        <div className="flex flex-col gap-4 md:hidden">
+          {filtered.map((review) => (
+            <div
+              key={review._id}
+              className="rounded-lg border border-border bg-card p-4"
+            >
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="font-medium text-foreground">
+                    {review.customerName}
+                  </p>
+                  <div className="mt-1 flex gap-0.5">
                     {Array.from({ length: review.rating }).map((_, i) => (
                       <Star
                         key={i}
@@ -291,86 +211,198 @@ export default function AdminReviewsPage() {
                       />
                     ))}
                   </div>
-                </TableCell>
-                <TableCell>{getStatusBadge(review.status)}</TableCell>
-                <TableCell className="text-muted-foreground">
-                  {review.createdAt}
-                </TableCell>
-                <TableCell>
-                  <div className="flex justify-end gap-1">
-                    {review.status !== "approved" && (
+                </div>
+                {getStatusBadge(review.status)}
+              </div>
+              <p className="mt-3 text-sm text-foreground/70">{review.text}</p>
+              <div className="mt-4 flex items-center justify-between">
+                <span className="text-xs text-muted-foreground">
+                  {formatDate(review.createdAt)}
+                </span>
+                <div className="flex gap-1">
+                  {review.status !== "approved" && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      disabled={mutating === review._id}
+                      className="text-emerald-400 hover:bg-emerald-500/10"
+                      onClick={() => handleStatusChange(review._id, "approved")}
+                    >
+                      <Check className="mr-1 h-3.5 w-3.5" />
+                      Approve
+                    </Button>
+                  )}
+                  {review.status !== "rejected" && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      disabled={mutating === review._id}
+                      className="text-amber-400 hover:bg-amber-500/10"
+                      onClick={() => handleStatusChange(review._id, "rejected")}
+                    >
+                      <X className="mr-1 h-3.5 w-3.5" />
+                      Reject
+                    </Button>
+                  )}
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
                       <Button
-                        size="icon"
+                        size="sm"
                         variant="ghost"
-                        className="h-8 w-8 text-emerald-400 hover:bg-emerald-500/10 hover:text-emerald-300"
-                        onClick={() => handleApprove(review.id)}
-                        title="Approve"
+                        disabled={mutating === review._id}
+                        className="text-muted-foreground hover:text-destructive"
                       >
-                        <Check className="h-4 w-4" />
+                        <Trash2 className="h-3.5 w-3.5" />
                       </Button>
-                    )}
-                    {review.status !== "rejected" && (
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="h-8 w-8 text-amber-400 hover:bg-amber-500/10 hover:text-amber-300"
-                        onClick={() => handleReject(review.id)}
-                        title="Reject"
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    )}
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent className="border-border bg-card">
+                      <AlertDialogHeader>
+                        <AlertDialogTitle className="text-foreground">
+                          Delete Review
+                        </AlertDialogTitle>
+                        <AlertDialogDescription className="text-muted-foreground">
+                          Are you sure you want to delete this review from{" "}
+                          {review.customerName}?
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel className="border-border bg-transparent text-foreground hover:bg-muted">
+                          Cancel
+                        </AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => handleDelete(review._id)}
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                          Delete
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Desktop table view */}
+      {!loading && (
+        <div className="hidden rounded-lg border border-border md:block">
+          <Table>
+            <TableHeader>
+              <TableRow className="border-border hover:bg-transparent">
+                <TableHead className="text-muted-foreground">Customer</TableHead>
+                <TableHead className="text-muted-foreground">Review</TableHead>
+                <TableHead className="text-muted-foreground">Rating</TableHead>
+                <TableHead className="text-muted-foreground">Status</TableHead>
+                <TableHead className="text-muted-foreground">Date</TableHead>
+                <TableHead className="text-right text-muted-foreground">
+                  Actions
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filtered.map((review) => (
+                <TableRow key={review._id} className="border-border">
+                  <TableCell className="font-medium text-foreground">
+                    {review.customerName}
+                  </TableCell>
+                  <TableCell className="max-w-sm text-foreground/70">
+                    <p className="line-clamp-2">{review.text}</p>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex gap-0.5">
+                      {Array.from({ length: review.rating }).map((_, i) => (
+                        <Star
+                          key={i}
+                          className="h-3.5 w-3.5 fill-primary text-primary"
+                        />
+                      ))}
+                    </div>
+                  </TableCell>
+                  <TableCell>{getStatusBadge(review.status)}</TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {formatDate(review.createdAt)}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex justify-end gap-1">
+                      {review.status !== "approved" && (
                         <Button
                           size="icon"
                           variant="ghost"
-                          className="h-8 w-8 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                          title="Delete"
+                          disabled={mutating === review._id}
+                          className="h-8 w-8 text-emerald-400 hover:bg-emerald-500/10 hover:text-emerald-300"
+                          onClick={() => handleStatusChange(review._id, "approved")}
+                          title="Approve"
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Check className="h-4 w-4" />
                         </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent className="border-border bg-card">
-                        <AlertDialogHeader>
-                          <AlertDialogTitle className="text-foreground">
-                            Delete Review
-                          </AlertDialogTitle>
-                          <AlertDialogDescription className="text-muted-foreground">
-                            Are you sure you want to delete this review from{" "}
-                            {review.customerName}?
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel className="border-border bg-transparent text-foreground hover:bg-muted">
-                            Cancel
-                          </AlertDialogCancel>
-                          <AlertDialogAction
-                            onClick={() => handleDelete(review.id)}
-                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                      )}
+                      {review.status !== "rejected" && (
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          disabled={mutating === review._id}
+                          className="h-8 w-8 text-amber-400 hover:bg-amber-500/10 hover:text-amber-300"
+                          onClick={() => handleStatusChange(review._id, "rejected")}
+                          title="Reject"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      )}
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            disabled={mutating === review._id}
+                            className="h-8 w-8 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                            title="Delete"
                           >
-                            Delete
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-            {filtered.length === 0 && (
-              <TableRow>
-                <TableCell
-                  colSpan={6}
-                  className="py-12 text-center text-muted-foreground"
-                >
-                  No reviews found with the current filter.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent className="border-border bg-card">
+                          <AlertDialogHeader>
+                            <AlertDialogTitle className="text-foreground">
+                              Delete Review
+                            </AlertDialogTitle>
+                            <AlertDialogDescription className="text-muted-foreground">
+                              Are you sure you want to delete this review from{" "}
+                              {review.customerName}?
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel className="border-border bg-transparent text-foreground hover:bg-muted">
+                              Cancel
+                            </AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => handleDelete(review._id)}
+                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            >
+                              Delete
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+              {filtered.length === 0 && (
+                <TableRow>
+                  <TableCell
+                    colSpan={6}
+                    className="py-12 text-center text-muted-foreground"
+                  >
+                    No reviews found with the current filter.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      )}
     </div>
   );
 }
