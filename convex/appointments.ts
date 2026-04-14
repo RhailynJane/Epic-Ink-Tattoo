@@ -112,7 +112,7 @@ export const sendNotificationEmail = internalAction({
           prettyDate: adminPrettyDate,
           time: args.time,
           message: args.message,
-          siteUrl: process.env.PUBLIC_SITE_URL ?? "https://epicinktattoo.ca",
+          siteUrl: process.env.PUBLIC_SITE_URL ?? "https://epic-ink-tattoo.vercel.app",
         }),
       }),
     });
@@ -128,7 +128,7 @@ export const sendNotificationEmail = internalAction({
       process.env.STUDIO_LOCATION ??
       "Unit A23, New Horizon Mall, 260300 Writing Creek Cres, Balzac, AB T4A 0X8";
     const studioPhone = process.env.STUDIO_PHONE ?? "(780) 286-7773";
-    const siteUrl = process.env.PUBLIC_SITE_URL ?? "https://epicinktattoo.ca";
+    const siteUrl = process.env.PUBLIC_SITE_URL ?? "https://epic-ink-tattoo.vercel.app";
 
     const prettyDate = (() => {
       const parts = args.date.split("-").map(Number);
@@ -651,7 +651,7 @@ export const sendStatusUpdateEmail = internalAction({
       process.env.STUDIO_LOCATION ??
       "Unit A23, New Horizon Mall, 260300 Writing Creek Cres, Balzac, AB T4A 0X8";
     const studioPhone = process.env.STUDIO_PHONE ?? "(780) 286-7773";
-    const siteUrl = process.env.PUBLIC_SITE_URL ?? "https://epicinktattoo.ca";
+    const siteUrl = process.env.PUBLIC_SITE_URL ?? "https://epic-ink-tattoo.vercel.app";
 
     const prettyDate = (() => {
       const parts = args.date.split("-").map(Number);

@@ -34,6 +34,24 @@ const fallbackReviews = [
     text: "Best tattoo experience of my life. The level of artistry here is unmatched. Eman took my rough idea and turned it into a masterpiece. I've gotten compliments from everyone who sees it. Highly recommended!",
     rating: 5,
   },
+  {
+    id: "4",
+    customerName: "Maryi Alvarez",
+    text: "Got a cover up tattoo here and I just love it! The whole process was so easy and he definitely made me feel less nervous. No complains at all and definitely recommend coming here. The vibes plus the artwork made it just 10x better for me thank you so so much.",
+    rating: 5,
+  },
+  {
+    id: "5",
+    customerName: "Mikayla Whyte",
+    text: "Manny is an awesome guy. He's very exprienced and does an amazing job.",
+    rating: 5,
+  },
+  {
+    id: "6",
+    customerName: "John Carlo Villamor",
+    text: "10/10 superb work! Very professional",
+    rating: 5,
+  },
 ];
 
 export function ReviewsSection() {
