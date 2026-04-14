@@ -11,6 +11,28 @@ export const SITE_DEFAULTS: Record<string, string> = {
     "Welcome to Epic Ink Tattoo, where art meets skin in the most exquisite way. At Epic Ink Tattoo, we believe that tattoos are more than just ink on the skin; they are symbols of individuality, stories of personal journeys, and expressions of inner beauty.",
   "whyUs.closing":
     "Come join us at Epic Ink Tattoo and let your skin tell your story.",
+  "whyUs.feature1Title": "Artistry & Skill",
+  "whyUs.feature1Body":
+    "Whether you're looking for intricate black and grey realism, vibrant color work, traditional designs, or custom creations, our artists have the skill and passion to bring your ideas to life.",
+  "whyUs.feature2Title": "Professionalism & Hygiene",
+  "whyUs.feature2Body":
+    "With a commitment to professionalism, hygiene, and customer satisfaction, we strive to create a welcoming and safe environment for all our clients.",
+  "whyUs.feature3Title": "Warmth & Respect",
+  "whyUs.feature3Body":
+    "From the moment you walk through our doors, you'll be greeted with warmth, respect, and a dedication to making your tattoo experience unforgettable.",
+  "whyUs.feature4Title": "Lasting Statements",
+  "whyUs.feature4Body":
+    "Explore our portfolio to see the artistry and diversity of our work, and feel free to reach out to schedule a consultation or appointment. Let us help you make a statement that lasts a lifetime.",
+
+  "header.brand": "Epic Ink Tattoo Studio",
+  "header.phone": "(780) 286-7773",
+  "header.phoneHref": "tel:7802867773",
+  "header.ctaLabel": "Book an Appointment",
+
+  "footer.brand": "Epic Ink Tattoo Studio",
+  "footer.address": "Unit A23, New Horizon Mall, Balzac, AB T4A 0X8",
+  "footer.facebookUrl": "https://www.facebook.com/profile.php?id=61559408381030",
+  "footer.instagramUrl": "https://www.instagram.com/epicink1919/",
 
   "about.eyebrow": "Meet The Artist",
   "about.titleLine1": "Passion, patience,",

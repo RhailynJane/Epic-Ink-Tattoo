@@ -5,30 +5,10 @@ import { Shield, Heart, Sparkles, Palette } from "lucide-react";
 import { EditableText } from "@/components/editable";
 
 const features = [
-  {
-    icon: Palette,
-    title: "Artistry & Skill",
-    description:
-      "Whether you're looking for intricate black and grey realism, vibrant color work, traditional designs, or custom creations, our artists have the skill and passion to bring your ideas to life.",
-  },
-  {
-    icon: Shield,
-    title: "Professionalism & Hygiene",
-    description:
-      "With a commitment to professionalism, hygiene, and customer satisfaction, we strive to create a welcoming and safe environment for all our clients.",
-  },
-  {
-    icon: Heart,
-    title: "Warmth & Respect",
-    description:
-      "From the moment you walk through our doors, you'll be greeted with warmth, respect, and a dedication to making your tattoo experience unforgettable.",
-  },
-  {
-    icon: Sparkles,
-    title: "Lasting Statements",
-    description:
-      "Explore our portfolio to see the artistry and diversity of our work, and feel free to reach out to schedule a consultation or appointment. Let us help you make a statement that lasts a lifetime.",
-  },
+  { icon: Palette, titleKey: "feature1Title", bodyKey: "feature1Body" },
+  { icon: Shield, titleKey: "feature2Title", bodyKey: "feature2Body" },
+  { icon: Heart, titleKey: "feature3Title", bodyKey: "feature3Body" },
+  { icon: Sparkles, titleKey: "feature4Title", bodyKey: "feature4Body" },
 ];
 
 const portfolioImages = [
@@ -55,19 +35,26 @@ export function WhyUsSection() {
         <div className="grid gap-8 md:grid-cols-2">
           {features.map((feature) => (
             <div
-              key={feature.title}
+              key={feature.titleKey}
               className="flex gap-5 rounded-lg border border-border bg-card p-6 transition-colors hover:border-primary/30"
             >
               <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-primary/10">
                 <feature.icon className="h-6 w-6 text-primary" />
               </div>
               <div>
-                <h3 className="mb-2 font-serif text-xl font-semibold text-primary">
-                  {feature.title}
-                </h3>
-                <p className="leading-relaxed text-foreground/70">
-                  {feature.description}
-                </p>
+                <EditableText
+                  section="whyUs"
+                  k={feature.titleKey}
+                  as="h3"
+                  className="mb-2 block font-serif text-xl font-semibold text-primary"
+                />
+                <EditableText
+                  section="whyUs"
+                  k={feature.bodyKey}
+                  as="p"
+                  multiline
+                  className="block leading-relaxed text-foreground/70"
+                />
               </div>
             </div>
           ))}

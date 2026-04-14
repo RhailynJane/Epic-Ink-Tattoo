@@ -51,4 +51,10 @@ export default defineSchema({
     storageId: v.id("_storage"),
     updatedAt: v.number(),
   }),
+
+  instagramEmbeds: defineTable({
+    url: v.string(),
+    order: v.number(),
+    createdAt: v.number(),
+  }).index("by_order", ["order"]),
 });

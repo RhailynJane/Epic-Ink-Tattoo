@@ -1,20 +1,35 @@
+"use client";
+
+import { EditableText } from "@/components/editable";
+import { useEditMode } from "@/components/edit-mode";
+import { useSiteContent } from "@/lib/use-site-content";
+
 export function SiteFooter() {
+  const { get } = useSiteContent();
+  const edit = useEditMode();
+
   return (
     <footer className="border-t border-border bg-background py-8">
       <div className="mx-auto max-w-6xl px-6">
         <div className="flex flex-col items-center gap-4 md:flex-row md:justify-between">
           <div className="text-center md:text-left">
-            <p className="font-serif text-lg font-bold text-primary">
-              Epic Ink Tattoo Studio
-            </p>
-            <p className="text-sm text-foreground/60">
-              Unit A23, New Horizon Mall, Balzac, AB T4A 0X8
-            </p>
+            <EditableText
+              section="footer"
+              k="brand"
+              as="p"
+              className="font-serif text-lg font-bold text-primary"
+            />
+            <EditableText
+              section="footer"
+              k="address"
+              as="p"
+              className="text-sm text-foreground/60"
+            />
           </div>
 
           <div className="flex items-center gap-4">
             <a
-              href="https://facebook.com"
+              href={get("footer", "facebookUrl")}
               target="_blank"
               rel="noopener noreferrer"
               className="text-foreground/60 transition-colors hover:text-primary"
@@ -25,7 +40,7 @@ export function SiteFooter() {
               </svg>
             </a>
             <a
-              href="https://instagram.com"
+              href={get("footer", "instagramUrl")}
               target="_blank"
               rel="noopener noreferrer"
               className="text-foreground/60 transition-colors hover:text-primary"
@@ -38,9 +53,39 @@ export function SiteFooter() {
           </div>
 
           <p className="text-sm text-foreground/50">
-            &copy; {new Date().getFullYear()} Epic Ink Tattoo. All rights reserved.
+            &copy; {new Date().getFullYear()} {get("footer", "brand")}. All rights reserved.
           </p>
         </div>
+
+        {edit?.enabled && (
+          <div className="mt-6 grid gap-3 rounded-md border border-dashed border-primary/40 bg-background/60 p-4 text-xs">
+            <p className="font-medium uppercase tracking-wider text-primary">
+              Social links (edit mode only)
+            </p>
+            <label className="flex flex-col gap-1">
+              <span className="text-muted-foreground">Facebook URL</span>
+              <input
+                type="url"
+                defaultValue={get("footer", "facebookUrl")}
+                onBlur={(e) =>
+                  edit.saveText("footer", "facebookUrl", e.target.value)
+                }
+                className="rounded-sm border border-border bg-input p-2 text-foreground outline-none"
+              />
+            </label>
+            <label className="flex flex-col gap-1">
+              <span className="text-muted-foreground">Instagram URL</span>
+              <input
+                type="url"
+                defaultValue={get("footer", "instagramUrl")}
+                onBlur={(e) =>
+                  edit.saveText("footer", "instagramUrl", e.target.value)
+                }
+                className="rounded-sm border border-border bg-input p-2 text-foreground outline-none"
+              />
+            </label>
+          </div>
+        )}
       </div>
     </footer>
   );

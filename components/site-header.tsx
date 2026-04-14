@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { Menu, X, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { EditableText } from "@/components/editable";
+import { useSiteContent } from "@/lib/use-site-content";
 
 const navLinks = [
   { label: "Why Us", href: "/#why-us" },
@@ -15,6 +17,7 @@ const navLinks = [
 export function SiteHeader() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { get } = useSiteContent();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -34,7 +37,7 @@ export function SiteHeader() {
     >
       <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
         <a href="#" className="font-serif text-xl font-bold text-primary tracking-wide">
-          Epic Ink Tattoo Studio
+          <EditableText section="header" k="brand" as="span" />
         </a>
 
         <nav className="hidden items-center gap-8 lg:flex">
@@ -51,17 +54,17 @@ export function SiteHeader() {
 
         <div className="hidden items-center gap-4 lg:flex">
           <a
-            href="tel:7802867773"
+            href={get("header", "phoneHref")}
             className="flex items-center gap-2 text-sm text-primary transition-colors hover:text-primary/80"
           >
             <Phone className="h-4 w-4" />
-            <span>(780) 286-7773</span>
+            <EditableText section="header" k="phone" as="span" />
           </a>
           <Button
             asChild
             className="border border-primary bg-transparent text-primary hover:bg-primary hover:text-primary-foreground transition-all duration-300"
           >
-            <a href="#contact">Book an Appointment</a>
+            <a href="#contact">{get("header", "ctaLabel")}</a>
           </Button>
         </div>
 
@@ -92,18 +95,18 @@ export function SiteHeader() {
               </a>
             ))}
             <a
-              href="tel:7802867773"
+              href={get("header", "phoneHref")}
               className="flex items-center gap-2 text-sm text-primary"
             >
               <Phone className="h-4 w-4" />
-              <span>(780) 286-7773</span>
+              <span>{get("header", "phone")}</span>
             </a>
             <Button
               asChild
               className="w-full border border-primary bg-transparent text-primary hover:bg-primary hover:text-primary-foreground"
             >
               <a href="#contact" onClick={() => setIsMobileMenuOpen(false)}>
-                Book an Appointment
+                {get("header", "ctaLabel")}
               </a>
             </Button>
           </nav>

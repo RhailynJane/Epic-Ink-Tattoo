@@ -13,6 +13,7 @@ import type * as appointments from "../appointments.js";
 import type * as artistImage from "../artistImage.js";
 import type * as dashboard from "../dashboard.js";
 import type * as gallery from "../gallery.js";
+import type * as instagramEmbeds from "../instagramEmbeds.js";
 import type * as reviews from "../reviews.js";
 import type * as siteContent from "../siteContent.js";
 
@@ -28,6 +29,7 @@ declare const fullApi: ApiFromModules<{
   artistImage: typeof artistImage;
   dashboard: typeof dashboard;
   gallery: typeof gallery;
+  instagramEmbeds: typeof instagramEmbeds;
   reviews: typeof reviews;
   siteContent: typeof siteContent;
 }>;

@@ -19,6 +19,7 @@ import { ProcessSection } from "@/components/process-section";
 import { FaqSection } from "@/components/faq-section";
 import { ContactSection } from "@/components/contact-section";
 import { SiteFooter } from "@/components/site-footer";
+import { SiteHeader } from "@/components/site-header";
 
 function EditorToolbar() {
   const edit = useEditMode();
@@ -121,6 +122,7 @@ export default function SiteEditorPage() {
     <EditModeProvider enabled>
       <main className="min-h-screen overflow-x-hidden bg-background">
         <EditorToolbar />
+        <SiteHeader />
         <HeroSection />
         <WhyUsSection />
         <ProcessSection />
