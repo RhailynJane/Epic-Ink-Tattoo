@@ -12,6 +12,7 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "react-jsx",
+    "types": ["node"],
     "paths": {}
   },
   "include": ["./**/*.ts", "./**/*.tsx", "../node_modules/.generated/convex/**/*.d.ts"],
