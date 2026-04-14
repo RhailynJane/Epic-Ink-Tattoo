@@ -1,6 +1,10 @@
+"use client";
+
 import Image from "next/image";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { EditableText } from "@/components/editable";
+import { useSiteContent } from "@/lib/use-site-content";
 
 const heroCards = [
   { src: "/images/gallery/tattoo-1.jpg", alt: "Maple Leaf Portrait tattoo", rotate: -6 },
@@ -12,6 +16,7 @@ const heroCards = [
 ];
 
 export function HeroSection() {
+  const { get } = useSiteContent();
   const loop = [...heroCards, ...heroCards];
 
   return (
@@ -25,20 +30,30 @@ export function HeroSection() {
       />
 
       <div className="mx-auto flex w-full max-w-6xl flex-col items-center gap-10 px-6 text-center animate-fade-up">
-        <span className="rounded-full border border-primary/30 bg-primary/5 px-4 py-1 text-xs font-medium uppercase tracking-[0.25em] text-primary/90">
-          Epic Ink Tattoo — Balzac, AB
-        </span>
+        <EditableText
+          section="hero"
+          k="badge"
+          className="rounded-full border border-primary/30 bg-primary/5 px-4 py-1 text-xs font-medium uppercase tracking-[0.25em] text-primary/90"
+        />
 
         <h1 className="max-w-4xl font-serif text-5xl font-semibold leading-[1.05] tracking-tight text-foreground md:text-7xl lg:text-[5.5rem]">
-          The Kind of Tattoo
+          <EditableText section="hero" k="titleLine1" as="span" />
           <br />
-          <span className="italic text-primary">You Won&apos;t Regret.</span>
+          <EditableText
+            section="hero"
+            k="titleLine2"
+            as="span"
+            className="italic text-primary"
+          />
         </h1>
 
-        <p className="max-w-2xl text-base leading-relaxed text-foreground/70 md:text-lg">
-          Custom, appointment-only tattoos by Eman at New Horizon Mall. Where
-          clean design meets permanent art — with passion poured into every line.
-        </p>
+        <EditableText
+          section="hero"
+          k="subtitle"
+          as="p"
+          multiline
+          className="max-w-2xl text-base leading-relaxed text-foreground/70 md:text-lg"
+        />
 
         <div className="flex flex-col items-center gap-3 sm:flex-row">
           <Button
@@ -47,7 +62,7 @@ export function HeroSection() {
             className="group bg-primary px-8 py-6 text-base font-medium text-primary-foreground hover:bg-primary/90"
           >
             <a href="#contact" className="flex items-center gap-2">
-              Book an Appointment
+              {get("hero", "ctaPrimary")}
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
             </a>
           </Button>
@@ -57,13 +72,16 @@ export function HeroSection() {
             variant="outline"
             className="border-border bg-transparent px-8 py-6 text-base text-foreground hover:bg-muted"
           >
-            <a href="#gallery">View the Gallery</a>
+            <a href="/gallery">{get("hero", "ctaSecondary")}</a>
           </Button>
         </div>
       </div>
 
       <div className="relative mt-16 hero-card-stack">
-        <div className="flex w-[200%] animate-marquee-x gap-5 px-4" style={{ ["--marquee-duration" as string]: "55s" }}>
+        <div
+          className="flex w-[200%] animate-marquee-x gap-5 px-4"
+          style={{ ["--marquee-duration" as string]: "55s" }}
+        >
           {loop.map((card, i) => (
             <div
               key={`row-${i}`}

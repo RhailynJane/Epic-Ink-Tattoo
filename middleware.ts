@@ -5,7 +5,7 @@ import { SESSION_COOKIE, verifyAdminToken } from "@/lib/auth";
 export default async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  if (pathname.startsWith("/admin")) {
+  if (pathname.startsWith("/admin") || pathname.startsWith("/site-editor")) {
     const token = req.cookies.get(SESSION_COOKIE)?.value;
     const session = await verifyAdminToken(token);
     if (!session) {
@@ -20,5 +20,5 @@ export default async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*"],
+  matcher: ["/admin/:path*", "/site-editor/:path*"],
 };

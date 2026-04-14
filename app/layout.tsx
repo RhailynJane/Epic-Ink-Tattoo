@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { Playfair_Display } from "next/font/google";
+import { Playfair_Display, Caveat } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { ConvexClientProvider } from "@/components/convex-client-provider";
 import { Toaster } from "sonner";
@@ -11,6 +11,10 @@ const _geistMono = Geist_Mono({ subsets: ["latin"] });
 const _playfair = Playfair_Display({
   subsets: ["latin"],
   variable: "--font-playfair",
+});
+const _caveat = Caveat({
+  subsets: ["latin"],
+  variable: "--font-caveat",
 });
 
 export const metadata: Metadata = {
@@ -39,7 +43,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={_playfair.variable}>
+    <html lang="en" className={`${_playfair.variable} ${_caveat.variable}`}>
       <body className="font-sans antialiased">
         <ConvexClientProvider>
           {children}

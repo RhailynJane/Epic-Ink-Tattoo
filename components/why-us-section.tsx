@@ -1,5 +1,8 @@
+"use client";
+
 import Image from "next/image";
 import { Shield, Heart, Sparkles, Palette } from "lucide-react";
+import { EditableText } from "@/components/editable";
 
 const features = [
   {
@@ -36,17 +39,18 @@ const portfolioImages = [
 
 export function WhyUsSection() {
   return (
-    <section id="why-us" className="bg-secondary py-24">
+    <section id="why-us" className="theme-paper bg-background py-24">
       <div className="mx-auto max-w-5xl px-6">
         <h2 className="mb-6 text-center font-serif text-4xl font-bold text-primary md:text-5xl">
           Why Us?
         </h2>
-        <p className="mx-auto mb-16 max-w-3xl text-center text-lg leading-relaxed text-foreground/80">
-          Welcome to Epic Ink Tattoo, where art meets skin in the most exquisite
-          way. At Epic Ink Tattoo, we believe that tattoos are more than just ink
-          on the skin; they are symbols of individuality, stories of personal
-          journeys, and expressions of inner beauty.
-        </p>
+        <EditableText
+          section="whyUs"
+          k="intro"
+          as="p"
+          multiline
+          className="mx-auto mb-16 block max-w-3xl text-center text-lg leading-relaxed text-foreground/80"
+        />
 
         <div className="grid gap-8 md:grid-cols-2">
           {features.map((feature) => (
@@ -69,9 +73,13 @@ export function WhyUsSection() {
           ))}
         </div>
 
-        <p className="mt-12 text-center text-lg italic text-foreground/70">
-          Come join us at Epic Ink Tattoo and let your skin tell your story.
-        </p>
+        <EditableText
+          section="whyUs"
+          k="closing"
+          as="p"
+          multiline
+          className="mt-12 block text-center text-lg italic text-foreground/70"
+        />
 
         {/* Portfolio Preview */}
         <div className="mt-16 grid grid-cols-3 gap-3 overflow-hidden rounded-xl">

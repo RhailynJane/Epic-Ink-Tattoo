@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(ls -la convex/.*.swp convex/.*cache*)"
+      "Bash(ls -la convex/.*.swp convex/.*cache*)",
+      "Bash(node -e \"console.log\\('JWT='+require\\('crypto'\\).randomBytes\\(48\\).toString\\('base64url'\\)\\);console.log\\('API='+require\\('crypto'\\).randomBytes\\(48\\).toString\\('base64url'\\)\\);\")"
     ]
   }
 }

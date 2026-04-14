@@ -1,44 +1,42 @@
 import { v } from "convex/values";
 import { query, mutation } from "./_generated/server";
-
-export const get = query({
-  args: { section: v.string() },
-  handler: async (ctx, args) => {
-    return ctx.db
-      .query("siteContent")
-      .withIndex("by_section", (q) => q.eq("section", args.section))
-      .collect();
-  },
-});
+import { assertAdminKey } from "./adminAuth";
 
 export const getAll = query({
   args: {},
   handler: async (ctx) => {
-    return ctx.db.query("siteContent").collect();
+    const rows = await ctx.db.query("siteContent").collect();
+    const map: Record<string, string> = {};
+    for (const r of rows) {
+      map[`${r.section}.${r.key}`] = r.value;
+    }
+    return map;
   },
 });
 
-export const upsert = mutation({
+export const set = mutation({
   args: {
+    adminKey: v.string(),
     section: v.string(),
     key: v.string(),
     value: v.string(),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("Not authenticated");
+    assertAdminKey(args.adminKey);
 
     const existing = await ctx.db
       .query("siteContent")
       .withIndex("by_section", (q) => q.eq("section", args.section))
       .collect();
-
-    const match = existing.find((item) => item.key === args.key);
+    const match = existing.find((r) => r.key === args.key);
 
     if (match) {
       return ctx.db.patch(match._id, { value: args.value });
-    } else {
-      return ctx.db.insert("siteContent", args);
     }
+    return ctx.db.insert("siteContent", {
+      section: args.section,
+      key: args.key,
+      value: args.value,
+    });
   },
 });

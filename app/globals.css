@@ -102,6 +102,55 @@ html {
   scroll-behavior: smooth;
 }
 
+/* ====== Light "paper" section theme ======
+   Apply `theme-paper` to any section to swap it to a cream/off-white
+   treatment with dark text and a deeper gold accent. Uses explicit
+   descendant selectors so it works regardless of Tailwind's @theme inline. */
+.theme-paper {
+  background-color: oklch(0.96 0.012 85) !important;
+  color: oklch(0.2 0.012 60) !important;
+}
+
+/* Backgrounds */
+.theme-paper .bg-background { background-color: oklch(0.96 0.012 85) !important; }
+.theme-paper .bg-card        { background-color: oklch(0.99 0.006 85) !important; }
+.theme-paper .bg-secondary   { background-color: oklch(0.9 0.012 85) !important; }
+.theme-paper .bg-muted       { background-color: oklch(0.9 0.012 85) !important; }
+.theme-paper .bg-input       { background-color: oklch(0.93 0.01 60) !important; }
+.theme-paper .bg-popover     { background-color: oklch(0.99 0.006 85) !important; }
+
+/* Primary accent — deeper gold on light bg for contrast */
+.theme-paper .bg-primary              { background-color: oklch(0.55 0.15 75) !important; color: #fff !important; }
+.theme-paper .text-primary            { color: oklch(0.5 0.14 75) !important; }
+.theme-paper .text-primary\/80        { color: oklch(0.5 0.14 75 / 0.85) !important; }
+.theme-paper .text-primary\/90        { color: oklch(0.5 0.14 75 / 0.95) !important; }
+.theme-paper .border-primary          { border-color: oklch(0.5 0.14 75) !important; }
+.theme-paper .border-primary\/30,
+.theme-paper .border-primary\/40,
+.theme-paper .border-primary\/50,
+.theme-paper .border-primary\/60,
+.theme-paper .border-primary\/70      { border-color: oklch(0.5 0.14 75 / 0.55) !important; }
+.theme-paper .bg-primary\/5           { background-color: oklch(0.55 0.15 75 / 0.05) !important; }
+.theme-paper .bg-primary\/10          { background-color: oklch(0.55 0.15 75 / 0.12) !important; }
+
+/* Text */
+.theme-paper .text-foreground         { color: oklch(0.18 0.012 60) !important; }
+.theme-paper .text-foreground\/60,
+.theme-paper .text-foreground\/70,
+.theme-paper .text-foreground\/75,
+.theme-paper .text-foreground\/80     { color: oklch(0.35 0.012 60) !important; }
+.theme-paper .text-muted-foreground   { color: oklch(0.42 0.012 60) !important; }
+
+/* Borders */
+.theme-paper .border-border           { border-color: oklch(0.82 0.012 60) !important; }
+.theme-paper .border-t.border-border,
+.theme-paper .border-b.border-border,
+.theme-paper .border-l.border-border,
+.theme-paper .border-r.border-border  { border-color: oklch(0.82 0.012 60) !important; }
+
+/* Dashed border visibility for Editable primitives */
+.theme-paper .outline-primary\/60     { outline-color: oklch(0.5 0.14 75 / 0.55) !important; }
+
 @keyframes marquee-x {
   from { transform: translate3d(0, 0, 0); }
   to   { transform: translate3d(-50%, 0, 0); }

@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint .",
     "convex:clean": "node -e \"const fs=require('fs');const p='convex';for(const f of fs.readdirSync(p))if(/\\.(js|js\\.map)$/.test(f)&&f!=='_generated')fs.unlinkSync(p+'/'+f);\"",
-    "convex:dev": "npm run convex:clean && npx convex dev"
+    "convex:dev": "npm run convex:clean && npx convex dev",
+    "seed:gallery": "node scripts/seed-gallery.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",

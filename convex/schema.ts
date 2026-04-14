@@ -30,6 +30,7 @@ export default defineSchema({
     phone: v.string(),
     email: v.string(),
     date: v.string(),
+    time: v.optional(v.string()),
     message: v.optional(v.string()),
     status: v.union(
       v.literal("pending"),

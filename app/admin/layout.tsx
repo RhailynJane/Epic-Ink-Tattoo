@@ -8,7 +8,7 @@ import {
   ImageIcon,
   MessageSquare,
   Calendar,
-  FileText,
+  Wand2,
   ArrowLeft,
   Menu,
   X,
@@ -19,10 +19,10 @@ import { cn } from "@/lib/utils";
 
 const navItems = [
   { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
+  { label: "Site Editor", href: "/site-editor", icon: Wand2 },
   { label: "Gallery", href: "/admin/gallery", icon: ImageIcon },
   { label: "Reviews", href: "/admin/reviews", icon: MessageSquare },
   { label: "Appointments", href: "/admin/appointments", icon: Calendar },
-  { label: "Site Content", href: "/admin/content", icon: FileText },
 ];
 
 export default function AdminLayout({

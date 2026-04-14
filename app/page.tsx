@@ -2,6 +2,7 @@ import { SiteHeader } from "@/components/site-header";
 import { HeroSection } from "@/components/hero-section";
 import { WhyUsSection } from "@/components/why-us-section";
 import { GallerySection } from "@/components/gallery-section";
+import { ProcessSection } from "@/components/process-section";
 import { AboutSection } from "@/components/about-section";
 import { FaqSection } from "@/components/faq-section";
 import { ReviewsSection } from "@/components/reviews-section";
@@ -14,7 +15,8 @@ export default function Home() {
       <SiteHeader />
       <HeroSection />
       <WhyUsSection />
-      <GallerySection />
+      <GallerySection preview />
+      <ProcessSection />
       <AboutSection />
       <ReviewsSection />
       <FaqSection />
