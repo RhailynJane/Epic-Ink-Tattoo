@@ -99,6 +99,7 @@ function formatDate(d: string) {
     month: "short",
     day: "numeric",
     year: "numeric",
+    timeZone: "UTC",
   });
 }
 
@@ -144,13 +145,25 @@ export default function AdminAppointmentsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus }),
       });
-      if (!res.ok) throw new Error("Failed to update.");
+      if (!res.ok) {
+        let detail = `HTTP ${res.status}`;
+        try {
+          const data = await res.json();
+          if (data?.error) detail = data.error;
+        } catch {}
+        throw new Error(`Failed to update: ${detail}`);
+      }
       setAppointments((prev) =>
         prev ? prev.map((a) => (a._id === id ? { ...a, status: newStatus } : a)) : prev
       );
       setSelected((prev) => (prev && prev._id === id ? { ...prev, status: newStatus } : prev));
-      toast.success(`Marked ${newStatus}.`);
+      const notice =
+        newStatus === "pending"
+          ? "Set back to pending."
+          : `Marked ${newStatus} — confirmation email queued to client.`;
+      toast.success(notice);
     } catch (err) {
+      console.error(err);
       toast.error(err instanceof Error ? err.message : "Update failed.");
     } finally {
       setMutating(null);

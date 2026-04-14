@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
@@ -13,9 +13,23 @@ interface GalleryItem {
   title: string;
   artist: string;
   url: string;
+  category?: string;
   mediaType?: "image" | "video";
   createdAt?: number;
 }
+
+const ALBUM_ORDER = [
+  "Reels",
+  "Cover Up",
+  "Portrait",
+  "Realism",
+  "Black & Grey",
+  "Color",
+  "Fine Line",
+  "Traditional",
+  "Flash",
+  "Custom",
+];
 
 const fallbackGallery: GalleryItem[] = [
   { id: "1", title: "Maple Leaf Portrait", artist: "Eman", url: "/images/gallery/tattoo-1.jpg" },
@@ -39,6 +53,7 @@ function formatPolaroidDate(ts?: number, i = 0) {
 
 export function GallerySection({ preview = false }: { preview?: boolean }) {
   const [selected, setSelected] = useState<GalleryItem | null>(null);
+  const [album, setAlbum] = useState<string>("All");
 
   const remote = useQuery(api.gallery.list);
   const items: GalleryItem[] = (remote && remote.length > 0
@@ -49,6 +64,7 @@ export function GallerySection({ preview = false }: { preview?: boolean }) {
           title: i.title,
           artist: i.artist,
           url: i.url as string,
+          category: i.category,
           mediaType: i.mediaType,
           createdAt: i.createdAt,
         }))
@@ -123,11 +139,24 @@ export function GallerySection({ preview = false }: { preview?: boolean }) {
     );
   }
 
-  // FULL gallery page layout (non-preview) — minimalist
+  // FULL gallery page layout (non-preview) — minimalist with album tabs
+  const albums = useMemo(() => {
+    const present = new Set<string>();
+    for (const it of items) {
+      if (it.category) present.add(it.category);
+    }
+    const ordered = ALBUM_ORDER.filter((a) => present.has(a));
+    const extras = [...present].filter((a) => !ALBUM_ORDER.includes(a)).sort();
+    return ["All", ...ordered, ...extras];
+  }, [items]);
+
+  const visible =
+    album === "All" ? shown : shown.filter((i) => i.category === album);
+
   return (
     <section id="gallery" className="relative bg-background py-24">
       <div className="mx-auto max-w-5xl px-6">
-        <div className="mb-16 text-center">
+        <div className="mb-10 text-center">
           <p className="mb-3 text-xs font-medium uppercase tracking-[0.3em] text-primary/80">
             Portfolio
           </p>
@@ -140,8 +169,30 @@ export function GallerySection({ preview = false }: { preview?: boolean }) {
           </p>
         </div>
 
+        {albums.length > 1 && (
+          <div className="mb-10 flex flex-wrap items-center justify-center gap-2">
+            {albums.map((a) => {
+              const active = a === album;
+              return (
+                <button
+                  key={a}
+                  type="button"
+                  onClick={() => setAlbum(a)}
+                  className={`rounded-full border px-4 py-1.5 text-xs font-medium uppercase tracking-[0.15em] transition-colors ${
+                    active
+                      ? "border-primary bg-primary text-primary-foreground"
+                      : "border-border bg-transparent text-foreground/70 hover:border-primary/50 hover:text-foreground"
+                  }`}
+                >
+                  {a}
+                </button>
+              );
+            })}
+          </div>
+        )}
+
         <div className="grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-3">
-          {shown.map((item) => (
+          {visible.map((item) => (
             <button
               key={item.id}
               className="group relative overflow-hidden"
@@ -186,6 +237,11 @@ export function GallerySection({ preview = false }: { preview?: boolean }) {
         {items.length === 0 && (
           <p className="mt-8 text-center text-sm text-muted-foreground">
             No gallery items yet.
+          </p>
+        )}
+        {items.length > 0 && visible.length === 0 && (
+          <p className="mt-12 text-center text-sm text-muted-foreground">
+            No items in this album yet.
           </p>
         )}
       </div>

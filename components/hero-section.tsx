@@ -79,13 +79,14 @@ export function HeroSection() {
 
       <div className="relative mt-16 hero-card-stack">
         <div
-          className="flex w-[200%] animate-marquee-x gap-5 px-4"
+          className="flex w-max animate-marquee-x px-4"
           style={{ ["--marquee-duration" as string]: "55s" }}
         >
           {loop.map((card, i) => (
             <div
               key={`row-${i}`}
-              className="relative aspect-3/4 w-44 shrink-0 overflow-hidden rounded-2xl border border-border bg-card shadow-[0_20px_60px_-20px_rgba(0,0,0,0.8)] sm:w-56 md:w-64"
+              aria-hidden={i >= heroCards.length}
+              className="relative mr-5 aspect-3/4 w-44 shrink-0 overflow-hidden rounded-2xl border border-border bg-card shadow-[0_20px_60px_-20px_rgba(0,0,0,0.8)] sm:w-56 md:w-64"
               style={{ transform: `rotate(${card.rotate}deg)` }}
             >
               <Image

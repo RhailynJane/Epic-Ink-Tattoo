@@ -88,6 +88,7 @@ export const sendNotificationEmail = internalAction({
         month: "long",
         day: "numeric",
         year: "numeric",
+        timeZone: "UTC",
       });
     })();
 
@@ -138,73 +139,205 @@ export const sendNotificationEmail = internalAction({
         month: "long",
         day: "numeric",
         year: "numeric",
+        timeZone: "UTC",
       });
     })();
 
-    const customerBody = customerTemplateId
-      ? {
-          sender: { name: senderName, email: senderEmail },
-          to: [
-            {
-              email: args.email,
-              name: `${args.firstName} ${args.lastName}`,
-            },
-          ],
-          templateId: Number(customerTemplateId),
-          params: {
-            first_name: args.firstName,
-            last_name: args.lastName,
-            appointment_date: prettyDate,
-            appointment_time: args.time ?? "To be confirmed",
-            location: studioLocation,
-            service_type: "Custom Tattoo Consultation",
-            provider_name: "Eman",
-            confirmation_link: siteUrl,
-            reschedule_link: `${siteUrl}/#contact`,
-            support_email: to,
-            support_phone: studioPhone,
+    const fallbackBody = {
+      sender: { name: senderName, email: senderEmail },
+      to: [
+        {
+          email: args.email,
+          name: `${args.firstName} ${args.lastName}`,
+        },
+      ],
+      replyTo: { name: senderName, email: to },
+      subject: "We received your appointment request — Epic Ink Tattoo",
+      htmlContent: buildCustomerFallbackHtml({
+        firstName: args.firstName,
+        prettyDate,
+        time: args.time,
+        message: args.message,
+        studioLocation,
+        studioPhone,
+        supportEmail: to,
+        siteUrl,
+      }),
+    };
+
+    let customerSent = false;
+
+    if (customerTemplateId) {
+      const templateBody = {
+        sender: { name: senderName, email: senderEmail },
+        to: [
+          {
+            email: args.email,
+            name: `${args.firstName} ${args.lastName}`,
           },
-        }
-      : {
-          sender: { name: senderName, email: senderEmail },
-          to: [
-            {
-              email: args.email,
-              name: `${args.firstName} ${args.lastName}`,
-            },
-          ],
-          replyTo: { name: senderName, email: to },
-          subject: "We received your appointment request — Epic Ink Tattoo",
-          htmlContent: buildCustomerFallbackHtml({
-            firstName: args.firstName,
-            prettyDate,
-            time: args.time,
-            message: args.message,
-            studioLocation,
-            studioPhone,
-            supportEmail: to,
-            siteUrl,
-          }),
-        };
+        ],
+        templateId: Number(customerTemplateId),
+        params: {
+          first_name: args.firstName,
+          last_name: args.lastName,
+          appointment_date: prettyDate,
+          appointment_time: args.time ?? "To be confirmed",
+          location: studioLocation,
+          service_type: "Custom Tattoo Consultation",
+          provider_name: "Eman",
+          confirmation_link: siteUrl,
+          reschedule_link: `${siteUrl}/#contact`,
+          support_email: to,
+          support_phone: studioPhone,
+        },
+      };
 
-    const customerRes = await fetch(brevoEndpoint, {
-      method: "POST",
-      headers: brevoHeaders,
-      body: JSON.stringify(customerBody),
-    });
+      const templateRes = await fetch(brevoEndpoint, {
+        method: "POST",
+        headers: brevoHeaders,
+        body: JSON.stringify(templateBody),
+      });
 
-    if (!customerRes.ok) {
-      const text = await customerRes.text();
-      console.error(
-        "Brevo customer send error:",
-        customerRes.status,
-        text
-      );
+      if (templateRes.ok) {
+        customerSent = true;
+      } else {
+        const errText = await templateRes.text();
+        console.error(
+          `Brevo template send failed (status ${templateRes.status}, templateId=${customerTemplateId}). Falling back to branded HTML.`,
+          errText
+        );
+      }
     }
 
-    return { adminSent: adminRes.ok, customerSent: customerRes.ok };
+    if (!customerSent) {
+      const fallbackRes = await fetch(brevoEndpoint, {
+        method: "POST",
+        headers: brevoHeaders,
+        body: JSON.stringify(fallbackBody),
+      });
+      if (fallbackRes.ok) {
+        customerSent = true;
+      } else {
+        const errText = await fallbackRes.text();
+        console.error(
+          `Brevo fallback send failed (status ${fallbackRes.status}) to ${args.email}.`,
+          errText
+        );
+      }
+    }
+
+    return { adminSent: adminRes.ok, customerSent };
   },
 });
+
+function buildStatusUpdateHtml(p: {
+  firstName: string;
+  prettyDate: string;
+  time?: string;
+  status: "confirmed" | "completed" | "cancelled";
+  studioLocation: string;
+  studioPhone: string;
+  supportEmail: string;
+  siteUrl: string;
+}): string {
+  const esc = (s: string) =>
+    s
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+
+  const palette = {
+    confirmed: {
+      accent: "#1a6b4a",
+      soft: "#e7f4ed",
+      softBorder: "#c4e3d2",
+      badge: "Confirmed",
+    },
+    completed: {
+      accent: "#5c4a1c",
+      soft: "#f6efd8",
+      softBorder: "#e6decb",
+      badge: "Completed",
+    },
+    cancelled: {
+      accent: "#8a2e2e",
+      soft: "#f9e7e7",
+      softBorder: "#e9c7c7",
+      badge: "Cancelled",
+    },
+  }[p.status];
+
+  const headline = {
+    confirmed: "Your appointment is confirmed",
+    completed: "Thanks for your visit",
+    cancelled: "Your appointment was cancelled",
+  }[p.status];
+
+  const body = {
+    confirmed: `Hi <strong>${esc(p.firstName)}</strong>, we've locked in your session. Please arrive 10 minutes early, eat beforehand, and stay hydrated. If anything changes, reach out at least 24 hours in advance.`,
+    completed: `Hi <strong>${esc(p.firstName)}</strong>, thanks for trusting us with your piece. Follow the aftercare instructions we shared in-studio closely — clean, moisturized, and out of direct sun is the rule of thumb for the next two weeks. We'd love to see it heal.`,
+    cancelled: `Hi <strong>${esc(p.firstName)}</strong>, this is a confirmation that your appointment has been cancelled. Any deposit questions can be addressed by replying to this email. We'd love to rebook whenever you're ready.`,
+  }[p.status];
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>${esc(headline)}</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f4f0e8;font-family:Georgia,'Times New Roman',serif;color:#1d1d1d;">
+<div style="display:none;max-height:0;overflow:hidden;opacity:0;color:#f4f0e8;">${esc(headline)} — ${esc(p.prettyDate)}${p.time ? " at " + esc(p.time) : ""}.</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f0e8;padding:32px 12px;">
+  <tr><td align="center">
+    <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:14px;overflow:hidden;box-shadow:0 10px 40px rgba(0,0,0,0.08);">
+      <tr>
+        <td style="background:#1d1d1d;padding:36px 44px 28px;">
+          <p style="margin:0 0 6px;font-family:Georgia,serif;font-size:11px;letter-spacing:0.35em;text-transform:uppercase;color:#d8b56b;">Epic Ink Tattoo</p>
+          <h1 style="margin:0;font-family:Georgia,serif;font-size:26px;font-weight:normal;color:#ffffff;letter-spacing:-0.2px;">${esc(headline)}</h1>
+          <p style="margin:14px 0 0;"><span style="display:inline-block;padding:5px 12px;border-radius:999px;background:${palette.accent};color:#ffffff;font-family:Georgia,serif;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;">${esc(palette.badge)}</span></p>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:30px 44px 8px;">
+          <p style="margin:0;font-family:Georgia,serif;font-size:15px;color:#444;line-height:1.7;">${body}</p>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:20px 44px 8px;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${palette.soft};border:1px solid ${palette.softBorder};border-radius:10px;">
+            <tr>
+              <td style="padding:18px 28px 4px;">
+                <p style="margin:0;font-family:Georgia,serif;font-size:11px;font-weight:600;letter-spacing:0.6px;text-transform:uppercase;color:${palette.accent};">Session date</p>
+                <p style="margin:4px 0 0;font-family:Georgia,serif;font-size:15px;color:#1d1d1d;font-weight:600;">${esc(p.prettyDate)}${p.time ? ` · ${esc(p.time)}` : ""}</p>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:12px 28px 18px;">
+                <p style="margin:0;font-family:Georgia,serif;font-size:11px;font-weight:600;letter-spacing:0.6px;text-transform:uppercase;color:${palette.accent};">Studio</p>
+                <p style="margin:4px 0 0;font-family:Georgia,serif;font-size:14px;color:#444;line-height:1.6;">${esc(p.studioLocation)}</p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:22px 44px 10px;">
+          <p style="margin:0;font-family:Georgia,serif;font-size:14px;color:#555;line-height:1.7;">Questions? Reply to this email or reach us at <a href="mailto:${esc(p.supportEmail)}" style="color:${palette.accent};text-decoration:underline;">${esc(p.supportEmail)}</a> · <a href="tel:${esc(p.studioPhone.replace(/[^0-9+]/g, ""))}" style="color:${palette.accent};text-decoration:underline;">${esc(p.studioPhone)}</a>.</p>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:8px 44px 28px;text-align:center;">
+          <a href="${esc(p.siteUrl)}" style="display:inline-block;font-family:Georgia,serif;font-size:11px;letter-spacing:0.3em;text-transform:uppercase;color:${palette.accent};text-decoration:none;">Epic Ink Tattoo — Balzac, AB</a>
+        </td>
+      </tr>
+    </table>
+  </td></tr>
+</table>
+</body>
+</html>`;
+}
 
 function buildAdminNotificationHtml(p: {
   firstName: string;
@@ -463,7 +596,125 @@ export const updateStatus = mutation({
   },
   handler: async (ctx, args) => {
     assertAdminKey(args.adminKey);
-    return ctx.db.patch(args.id, { status: args.status });
+
+    const existing = await ctx.db.get(args.id);
+    if (!existing) throw new Error("Appointment not found.");
+
+    await ctx.db.patch(args.id, { status: args.status });
+
+    if (args.status !== "pending" && existing.status !== args.status) {
+      await ctx.scheduler.runAfter(
+        0,
+        internal.appointments.sendStatusUpdateEmail,
+        {
+          firstName: existing.firstName,
+          lastName: existing.lastName,
+          email: existing.email,
+          date: existing.date,
+          time: existing.time,
+          status: args.status,
+        }
+      );
+    }
+
+    return { ok: true };
+  },
+});
+
+export const sendStatusUpdateEmail = internalAction({
+  args: {
+    firstName: v.string(),
+    lastName: v.string(),
+    email: v.string(),
+    date: v.string(),
+    time: v.optional(v.string()),
+    status: v.union(
+      v.literal("confirmed"),
+      v.literal("completed"),
+      v.literal("cancelled"),
+      v.literal("pending")
+    ),
+  },
+  handler: async (_ctx, args) => {
+    if (args.status === "pending") return { sent: false, reason: "pending_status_no_email" };
+
+    const apiKey = process.env.BREVO_API_KEY;
+    if (!apiKey) {
+      console.warn("BREVO_API_KEY not set — skipping status update email.");
+      return { sent: false, reason: "missing_api_key" };
+    }
+
+    const to = process.env.BOOKING_NOTIFICATION_EMAIL ?? "epicinktattoo.ca@gmail.com";
+    const senderEmail = process.env.BREVO_SENDER_EMAIL ?? to;
+    const senderName = process.env.BREVO_SENDER_NAME ?? "Epic Ink Tattoo Bookings";
+    const studioLocation =
+      process.env.STUDIO_LOCATION ??
+      "Unit A23, New Horizon Mall, 260300 Writing Creek Cres, Balzac, AB T4A 0X8";
+    const studioPhone = process.env.STUDIO_PHONE ?? "(780) 286-7773";
+    const siteUrl = process.env.PUBLIC_SITE_URL ?? "https://epicinktattoo.ca";
+
+    const prettyDate = (() => {
+      const parts = args.date.split("-").map(Number);
+      if (parts.length !== 3) return args.date;
+      const d = new Date(Date.UTC(parts[0], parts[1] - 1, parts[2]));
+      return d.toLocaleDateString("en-CA", {
+        weekday: "long",
+        month: "long",
+        day: "numeric",
+        year: "numeric",
+        timeZone: "UTC",
+      });
+    })();
+
+    const subjectByStatus: Record<
+      "confirmed" | "completed" | "cancelled",
+      string
+    > = {
+      confirmed: "Your Epic Ink Tattoo appointment is confirmed",
+      completed: "Thanks for visiting Epic Ink Tattoo",
+      cancelled: "Your Epic Ink Tattoo appointment has been cancelled",
+    };
+
+    const res = await fetch("https://api.brevo.com/v3/smtp/email", {
+      method: "POST",
+      headers: {
+        "api-key": apiKey,
+        "Content-Type": "application/json",
+        accept: "application/json",
+      },
+      body: JSON.stringify({
+        sender: { name: senderName, email: senderEmail },
+        to: [
+          {
+            email: args.email,
+            name: `${args.firstName} ${args.lastName}`,
+          },
+        ],
+        replyTo: { name: senderName, email: to },
+        subject: subjectByStatus[args.status as "confirmed" | "completed" | "cancelled"],
+        htmlContent: buildStatusUpdateHtml({
+          firstName: args.firstName,
+          prettyDate,
+          time: args.time,
+          status: args.status as "confirmed" | "completed" | "cancelled",
+          studioLocation,
+          studioPhone,
+          supportEmail: to,
+          siteUrl,
+        }),
+      }),
+    });
+
+    if (!res.ok) {
+      const text = await res.text();
+      console.error(
+        `Brevo status-update send failed (status ${res.status}) to ${args.email}:`,
+        text
+      );
+      return { sent: false, reason: "send_failed", status: res.status };
+    }
+
+    return { sent: true };
   },
 });
 

@@ -460,7 +460,7 @@ export default function AdminGalleryPage() {
                   />
                 </div>
                 <div>
-                  <Label className="text-foreground/80">Category (all)</Label>
+                  <Label className="text-foreground/80">Album (all)</Label>
                   <Select value={category} onValueChange={setCategory}>
                     <SelectTrigger className="mt-1 border-border bg-input text-foreground">
                       <SelectValue />
@@ -649,11 +649,15 @@ export default function AdminGalleryPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="border-border bg-card">
+                    <SelectItem value="Reels">Reels</SelectItem>
+                    <SelectItem value="Cover Up">Cover Up</SelectItem>
                     <SelectItem value="Color">Color</SelectItem>
                     <SelectItem value="Black & Grey">Black &amp; Grey</SelectItem>
                     <SelectItem value="Realism">Realism</SelectItem>
                     <SelectItem value="Traditional">Traditional</SelectItem>
                     <SelectItem value="Fine Line">Fine Line</SelectItem>
+                    <SelectItem value="Portrait">Portrait</SelectItem>
+                    <SelectItem value="Flash">Flash</SelectItem>
                     <SelectItem value="Custom">Custom</SelectItem>
                   </SelectContent>
                 </Select>
