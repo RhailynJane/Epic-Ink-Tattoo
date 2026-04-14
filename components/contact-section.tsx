@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { MapPin, Phone, Clock } from "lucide-react";
+import { useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -10,6 +12,7 @@ import { toast } from "sonner";
 
 export function ContactSection() {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const createAppointment = useMutation(api.appointments.create);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -18,8 +21,10 @@ export function ContactSection() {
 
     const firstName = formData.get("firstName") as string;
     const lastName = formData.get("lastName") as string;
+    const phone = (formData.get("phone") as string) ?? "";
     const email = formData.get("email") as string;
     const date = formData.get("date") as string;
+    const message = (formData.get("message") as string) ?? "";
 
     if (!firstName || !lastName || !email || !date) {
       toast.error("Please fill in all required fields.");
@@ -28,13 +33,20 @@ export function ContactSection() {
 
     setIsSubmitting(true);
     try {
-      // When Convex is connected, this will save via api.appointments.create
-      await new Promise((r) => setTimeout(r, 500));
+      await createAppointment({
+        firstName,
+        lastName,
+        phone,
+        email,
+        date,
+        message: message || undefined,
+      });
       toast.success(
         "Appointment request submitted! We'll get back to you within 48 hours."
       );
       form.reset();
-    } catch {
+    } catch (err) {
+      console.error(err);
       toast.error("Failed to submit. Please try again or call us directly.");
     } finally {
       setIsSubmitting(false);
@@ -42,16 +54,22 @@ export function ContactSection() {
   }
 
   return (
-    <section id="contact" className="bg-secondary py-24">
+    <section id="contact" className="bg-background py-28">
       <div className="mx-auto max-w-6xl px-6">
         <div className="flex flex-col gap-12 lg:flex-row">
           {/* Contact Info */}
           <div className="lg:w-1/2">
-            <h2 className="mb-4 font-serif text-4xl font-bold text-primary md:text-5xl">
-              Contact Us
+            <p className="mb-3 text-xs font-medium uppercase tracking-[0.3em] text-primary/80">
+              Book an Appointment
+            </p>
+            <h2 className="mb-6 font-serif text-4xl font-semibold leading-tight text-foreground md:text-5xl">
+              Let&rsquo;s Create
+              <br />
+              <span className="italic text-primary">Something Permanent.</span>
             </h2>
-            <p className="mb-8 text-foreground/70">
-              Fill out the form and we{"'"}ll get back to you within 48 hours.
+            <p className="mb-10 max-w-md text-sm leading-relaxed text-foreground/70">
+              Custom tattoos are available by appointment only. Share your idea
+              and we&rsquo;ll craft a design made to last a lifetime.
             </p>
 
             <div className="flex flex-col gap-6">
@@ -151,9 +169,9 @@ export function ContactSection() {
 
           {/* Appointment Form */}
           <div className="lg:w-1/2">
-            <div className="rounded-xl border border-border bg-card p-8">
-              <h3 className="mb-6 font-serif text-2xl font-bold text-primary">
-                Book an Appointment
+            <div className="rounded-2xl border border-border bg-card p-8">
+              <h3 className="mb-6 font-serif text-2xl font-semibold text-foreground">
+                Share your idea
               </h3>
               <form onSubmit={handleSubmit} className="flex flex-col gap-5">
                 <div className="grid grid-cols-2 gap-4">

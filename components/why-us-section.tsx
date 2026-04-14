@@ -76,7 +76,7 @@ export function WhyUsSection() {
         {/* Portfolio Preview */}
         <div className="mt-16 grid grid-cols-3 gap-3 overflow-hidden rounded-xl">
           {portfolioImages.map((img) => (
-            <div key={img.src} className="relative aspect-[4/3] overflow-hidden">
+            <div key={img.src} className="relative aspect-4/3 overflow-hidden">
               <Image
                 src={img.src}
                 alt={img.alt}

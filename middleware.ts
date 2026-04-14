@@ -1,24 +1,24 @@
-import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { SESSION_COOKIE, verifyAdminToken } from "@/lib/auth";
 
-const isProtectedRoute = createRouteMatcher(["/admin(.*)"]);
+export default async function middleware(req: NextRequest) {
+  const { pathname } = req.nextUrl;
 
-const clerkKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+  if (pathname.startsWith("/admin")) {
+    const token = req.cookies.get(SESSION_COOKIE)?.value;
+    const session = await verifyAdminToken(token);
+    if (!session) {
+      const url = req.nextUrl.clone();
+      url.pathname = "/sign-in";
+      url.searchParams.set("from", pathname);
+      return NextResponse.redirect(url);
+    }
+  }
 
-export default clerkKey
-  ? clerkMiddleware(async (auth, req) => {
-      if (isProtectedRoute(req)) {
-        await auth.protect();
-      }
-    })
-  : function middleware(_req: NextRequest) {
-      return NextResponse.next();
-    };
+  return NextResponse.next();
+}
 
 export const config = {
-  matcher: [
-    "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
-    "/(api|trpc)(.*)",
-  ],
+  matcher: ["/admin/:path*"],
 };

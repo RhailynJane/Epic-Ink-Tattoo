@@ -2,7 +2,8 @@
   "compilerOptions": {
     "target": "ESNext",
     "lib": ["ES2021", "dom"],
-    "allowJs": true,
+    "allowJs": false,
+    "noEmit": true,
     "skipLibCheck": true,
     "strict": true,
     "forceConsistentCasingInFileNames": true,

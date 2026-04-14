@@ -8,3 +8,9 @@ node_modules/
 .next/
 .env*.local
 .DS_Store
+
+# Stale compiled output that conflicts with the Convex bundler.
+# Only .ts files should live directly in /convex; compiled .js are dupes.
+convex/*.js
+convex/*.js.map
+!convex/_generated/*.js

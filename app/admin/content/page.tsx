@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Save } from "lucide-react";
+import Image from "next/image";
+import { Save, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -34,6 +35,28 @@ export default function AdminContentPage() {
     artistBio:
       "This has been Eman's unwavering mantra ever since he first picked up a tattoo needle. Eman's journey into the world of tattoo artistry began 15 years ago, when he stumbled upon an old tattoo magazine in a dusty corner of a bookstore.",
   });
+
+  const [artistImagePreview, setArtistImagePreview] = useState<string>(
+    "/images/artist.jpg"
+  );
+  const [artistImageFile, setArtistImageFile] = useState<File | null>(null);
+
+  function handleArtistImageChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setArtistImageFile(file);
+    setArtistImagePreview(URL.createObjectURL(file));
+  }
+
+  async function handleArtistImageUpload() {
+    if (!artistImageFile) {
+      toast.error("Please select an image first.");
+      return;
+    }
+    toast.success(
+      "Artist image uploaded! Connect Convex to persist the change."
+    );
+  }
 
   const [contactData, setContactData] = useState({
     subtitle: "Fill out the form and we'll get back to you within 48 hours.",
@@ -176,6 +199,39 @@ export default function AdminContentPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="flex flex-col gap-4">
+              <div>
+                <Label className="text-foreground/80">Artist Image</Label>
+                <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-start">
+                  <div className="relative aspect-3/4 w-40 shrink-0 overflow-hidden rounded-lg border border-border bg-muted">
+                    <Image
+                      src={artistImagePreview}
+                      alt="Artist preview"
+                      fill
+                      className="object-cover"
+                      unoptimized
+                    />
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleArtistImageChange}
+                      className="border-border bg-input text-foreground"
+                    />
+                    <Button
+                      type="button"
+                      onClick={handleArtistImageUpload}
+                      className="w-fit bg-primary text-primary-foreground hover:bg-primary/90"
+                    >
+                      <Upload className="mr-2 h-4 w-4" />
+                      Upload Image
+                    </Button>
+                    <p className="text-xs text-muted-foreground">
+                      This image is displayed in the About section as the artist&apos;s photo.
+                    </p>
+                  </div>
+                </div>
+              </div>
               <div>
                 <Label className="text-foreground/80">
                   Studio Description

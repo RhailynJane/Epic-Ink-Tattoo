@@ -7,6 +7,7 @@ export default defineSchema({
     artist: v.string(),
     category: v.optional(v.string()),
     storageId: v.id("_storage"),
+    mediaType: v.optional(v.union(v.literal("image"), v.literal("video"))),
     order: v.number(),
     createdAt: v.number(),
   }).index("by_order", ["order"]),
@@ -44,4 +45,9 @@ export default defineSchema({
     key: v.string(),
     value: v.string(),
   }).index("by_section", ["section"]),
+
+  artistImage: defineTable({
+    storageId: v.id("_storage"),
+    updatedAt: v.number(),
+  }),
 });

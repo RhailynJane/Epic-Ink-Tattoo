@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { Plus, Trash2, Edit2, ImageIcon } from "lucide-react";
+import { Plus, Trash2, Edit2, ImageIcon, Film } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -40,6 +40,7 @@ interface GalleryImage {
   artist: string;
   category: string;
   url: string;
+  mediaType?: "image" | "video";
 }
 
 const initialImages: GalleryImage[] = [
@@ -125,27 +126,31 @@ export default function AdminGalleryPage() {
           <DialogTrigger asChild>
             <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
               <Plus className="mr-2 h-4 w-4" />
-              Upload Image
+              Upload Media
             </Button>
           </DialogTrigger>
           <DialogContent className="border-border bg-card">
             <DialogHeader>
               <DialogTitle className="font-serif text-xl text-primary">
-                Upload Gallery Image
+                Upload Gallery Media
               </DialogTitle>
             </DialogHeader>
             <form onSubmit={handleUpload} className="flex flex-col gap-4">
               <div>
-                <Label className="text-foreground/80">Image File</Label>
+                <Label className="text-foreground/80">Image or Video File</Label>
                 <div className="mt-1 flex items-center justify-center rounded-lg border-2 border-dashed border-border p-8 transition-colors hover:border-primary/30">
                   <div className="flex flex-col items-center gap-2 text-center">
-                    <ImageIcon className="h-10 w-10 text-muted-foreground" />
+                    <div className="flex gap-2">
+                      <ImageIcon className="h-10 w-10 text-muted-foreground" />
+                      <Film className="h-10 w-10 text-muted-foreground" />
+                    </div>
                     <p className="text-sm text-muted-foreground">
-                      Drag and drop or click to upload
+                      Drag and drop or click to upload (images or videos)
                     </p>
                     <Input
                       type="file"
-                      accept="image/*"
+                      name="file"
+                      accept="image/*,video/*"
                       className="mt-2 max-w-xs border-border bg-input text-foreground"
                     />
                   </div>
@@ -206,12 +211,22 @@ export default function AdminGalleryPage() {
             className="group border-border bg-card overflow-hidden transition-all hover:border-primary/30"
           >
             <div className="relative aspect-square overflow-hidden">
-              <Image
-                src={image.url}
-                alt={image.title}
-                fill
-                className="object-cover transition-transform duration-500 group-hover:scale-105"
-              />
+              {image.mediaType === "video" ? (
+                <video
+                  src={image.url}
+                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  muted
+                  playsInline
+                  preload="metadata"
+                />
+              ) : (
+                <Image
+                  src={image.url}
+                  alt={image.title}
+                  fill
+                  className="object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+              )}
             </div>
             <CardContent className="p-4">
               <div className="flex items-start justify-between">

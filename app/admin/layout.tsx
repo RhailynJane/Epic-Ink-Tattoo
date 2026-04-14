@@ -12,7 +12,9 @@ import {
   ArrowLeft,
   Menu,
   X,
+  LogOut,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 
 const navItems = [
@@ -29,7 +31,20 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
+
+  async function handleSignOut() {
+    setSigningOut(true);
+    try {
+      await fetch("/api/auth/sign-out", { method: "POST" });
+      router.replace("/");
+      router.refresh();
+    } finally {
+      setSigningOut(false);
+    }
+  }
 
   const SidebarContent = () => (
     <>
@@ -71,7 +86,7 @@ export default function AdminLayout({
         })}
       </nav>
 
-      <div className="border-t border-sidebar-border p-4">
+      <div className="flex flex-col gap-2 border-t border-sidebar-border p-4">
         <Link
           href="/"
           className="flex items-center gap-2 text-sm text-sidebar-foreground/60 transition-colors hover:text-sidebar-foreground"
@@ -79,6 +94,15 @@ export default function AdminLayout({
           <ArrowLeft className="h-4 w-4" />
           Back to Website
         </Link>
+        <button
+          type="button"
+          onClick={handleSignOut}
+          disabled={signingOut}
+          className="flex items-center gap-2 text-sm text-sidebar-foreground/60 transition-colors hover:text-destructive disabled:opacity-60"
+        >
+          <LogOut className="h-4 w-4" />
+          {signingOut ? "Signing out..." : "Sign Out"}
+        </button>
       </div>
     </>
   );

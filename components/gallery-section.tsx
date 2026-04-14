@@ -4,7 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 
-const fallbackGallery = [
+const fallbackGallery: GalleryItem[] = [
   {
     id: "1",
     title: "Maple Leaf Portrait",
@@ -48,6 +48,7 @@ interface GalleryItem {
   title: string;
   artist: string;
   url: string;
+  mediaType?: "image" | "video";
 }
 
 export function GallerySection() {
@@ -77,12 +78,24 @@ export function GallerySection() {
               onClick={() => setSelectedImage(item)}
             >
               <div className={`relative ${index === 0 ? "aspect-square" : "aspect-square"}`}>
-                <Image
-                  src={item.url}
-                  alt={item.title}
-                  fill
-                  className="object-cover transition-transform duration-500 group-hover:scale-110"
-                />
+                {item.mediaType === "video" ? (
+                  <video
+                    src={item.url}
+                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                    muted
+                    loop
+                    playsInline
+                    autoPlay
+                    preload="metadata"
+                  />
+                ) : (
+                  <Image
+                    src={item.url}
+                    alt={item.title}
+                    fill
+                    className="object-cover transition-transform duration-500 group-hover:scale-110"
+                  />
+                )}
                 <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/70 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
                   <span className="border border-primary px-4 py-2 font-serif text-lg font-semibold text-primary">
                     {item.title}
@@ -102,12 +115,22 @@ export function GallerySection() {
           {selectedImage && (
             <div>
               <div className="relative aspect-video w-full">
-                <Image
-                  src={selectedImage.url}
-                  alt={selectedImage.title}
-                  fill
-                  className="object-contain"
-                />
+                {selectedImage.mediaType === "video" ? (
+                  <video
+                    src={selectedImage.url}
+                    className="h-full w-full object-contain"
+                    controls
+                    autoPlay
+                    playsInline
+                  />
+                ) : (
+                  <Image
+                    src={selectedImage.url}
+                    alt={selectedImage.title}
+                    fill
+                    className="object-contain"
+                  />
+                )}
               </div>
               <div className="p-6">
                 <h3 className="font-serif text-xl font-bold text-primary">
