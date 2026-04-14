@@ -2,22 +2,40 @@
 
 import Image from "next/image";
 import { ArrowRight } from "lucide-react";
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
 import { Button } from "@/components/ui/button";
 import { EditableText } from "@/components/editable";
 import { useSiteContent } from "@/lib/use-site-content";
 
-const heroCards = [
-  { src: "/images/gallery/tattoo-1.jpg", alt: "Maple Leaf Portrait tattoo", rotate: -6 },
-  { src: "/images/gallery/tattoo-2.jpg", alt: "Tiger Cub tattoo", rotate: 4 },
-  { src: "/images/gallery/tattoo-3.jpg", alt: "Butterfly Art tattoo", rotate: -3 },
-  { src: "/images/gallery/tattoo-4.jpg", alt: "Dog Portrait tattoo", rotate: -4 },
-  { src: "/images/gallery/tattoo-5.jpg", alt: "Feather Design tattoo", rotate: 6 },
-  { src: "/images/gallery/tattoo-6.jpg", alt: "Lion Realism tattoo", rotate: -5 },
+const fallbackImages = [
+  "/images/gallery/tattoo-1.jpg",
+  "/images/gallery/tattoo-2.jpg",
+  "/images/gallery/tattoo-3.jpg",
+  "/images/gallery/tattoo-4.jpg",
+  "/images/gallery/tattoo-5.jpg",
+  "/images/gallery/tattoo-6.jpg",
 ];
+
+const rotations = [-6, 4, -3, -4, 6, -5, 3, -2, 5];
 
 export function HeroSection() {
   const { get } = useSiteContent();
-  const loop = [...heroCards, ...heroCards];
+  const remote = useQuery(api.gallery.list);
+
+  const images =
+    remote && remote.length > 0
+      ? remote
+          .filter((i) => !!i.url && i.mediaType !== "video")
+          .slice(0, 8)
+          .map((i) => ({ src: i.url as string, alt: i.title }))
+      : fallbackImages.map((src, i) => ({ src, alt: `Tattoo ${i + 1}` }));
+
+  const cards = images.map((img, i) => ({
+    ...img,
+    rotate: rotations[i % rotations.length],
+  }));
+  const loop = [...cards, ...cards];
 
   return (
     <section className="relative isolate flex min-h-screen flex-col justify-center overflow-hidden bg-background pt-28 pb-20">
@@ -85,7 +103,7 @@ export function HeroSection() {
           {loop.map((card, i) => (
             <div
               key={`row-${i}`}
-              aria-hidden={i >= heroCards.length}
+              aria-hidden={i >= cards.length}
               className="relative mr-5 aspect-3/4 w-44 shrink-0 overflow-hidden rounded-2xl border border-border bg-card shadow-[0_20px_60px_-20px_rgba(0,0,0,0.8)] sm:w-56 md:w-64"
               style={{ transform: `rotate(${card.rotate}deg)` }}
             >
